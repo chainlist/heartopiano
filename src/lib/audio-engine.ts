@@ -1,3 +1,5 @@
+import { base } from '$app/paths';
+
 let audioContext: AudioContext | null = null;
 
 function getAudioContext(): AudioContext {
@@ -40,7 +42,7 @@ async function loadSamples(): Promise<void> {
 		const ctx = getAudioContext();
 		await Promise.all(
 			SAMPLE_MAP.map(async ({ name }) => {
-				const response = await fetch(`/samples/${name}.mp3`);
+				const response = await fetch(`${base}/samples/${name}.mp3`);
 				const arrayBuffer = await response.arrayBuffer();
 				const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
 				sampleBuffers.set(name, audioBuffer);
