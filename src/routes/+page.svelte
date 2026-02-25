@@ -9,7 +9,7 @@
 <main>
   <div class="header">
     <h1>ChainList Piano</h1>
-    <p>Juste pour pas faire chier Dyhoss et Daisy in-game</p>
+    <p>Une semaine pour tout apprendre</p>
   </div>
   <Piano />
 </main>
