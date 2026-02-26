@@ -28,8 +28,8 @@ const ROW_CONFIGS: RowConfig[] = [
 	{
 		// Bottom row - Lower octave (C3-B3)
 		octaveNum: 3,
-		whiteKeys: ['Comma', 'Period', 'Slash', 'Semicolon', 'Quote', 'BracketLeft', 'BracketRight'],
-		blackKeys: ['KeyK', 'KeyL', 'KeyO', 'KeyP', 'Minus'],
+		whiteKeys: ['Comma', 'Period', 'Slash', 'KeyO', 'KeyP', 'BracketLeft', 'BracketRight'],
+		blackKeys: ['KeyL', 'Semicolon', 'Digit0', 'Minus', 'Equal'],
 		includeNextC: false,
 		octaveLabel: 'lower',
 		row: 0
@@ -57,13 +57,13 @@ const ROW_CONFIGS: RowConfig[] = [
 
 // QWERTY fallback: physical code → display character (used when Keyboard API is unavailable)
 const QWERTY_FALLBACK: Record<string, string> = {
-	Comma: ',', Period: '.', Slash: '/', Semicolon: ';', Quote: "'",
-	BracketLeft: '[', BracketRight: ']', Minus: '-',
-	KeyL: 'L', KeyK: 'K', KeyO: 'O', KeyP: 'P',
+	Comma: ',', Period: '.', Slash: '/', Semicolon: ';',
+	BracketLeft: '[', BracketRight: ']', Minus: '-', Equal: '=',
+	KeyL: 'L', KeyO: 'O', KeyP: 'P',
 	KeyZ: 'Z', KeyX: 'X', KeyC: 'C', KeyV: 'V', KeyB: 'B', KeyN: 'N', KeyM: 'M',
 	KeyS: 'S', KeyD: 'D', KeyG: 'G', KeyH: 'H', KeyJ: 'J',
 	KeyQ: 'Q', KeyW: 'W', KeyE: 'E', KeyR: 'R', KeyT: 'T', KeyY: 'Y', KeyU: 'U', KeyI: 'I',
-	Digit2: '2', Digit3: '3', Digit5: '5', Digit6: '6', Digit7: '7'
+	Digit0: '0', Digit2: '2', Digit3: '3', Digit5: '5', Digit6: '6', Digit7: '7'
 };
 
 export function buildPianoKeys(): PianoKey[] {
