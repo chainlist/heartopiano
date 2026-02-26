@@ -2,6 +2,7 @@ import { base } from '$app/paths';
 import type { Instrument } from '$lib/types';
 
 let audioContext: AudioContext | null = null;
+let masterCompressor: DynamicsCompressorNode | null = null;
 
 function getAudioContext(): AudioContext {
 	if (!audioContext) {
@@ -11,6 +12,20 @@ function getAudioContext(): AudioContext {
 		audioContext.resume();
 	}
 	return audioContext;
+}
+
+function getMasterOutput(): DynamicsCompressorNode {
+	const ctx = getAudioContext();
+	if (!masterCompressor) {
+		masterCompressor = ctx.createDynamicsCompressor();
+		masterCompressor.threshold.value = -6;
+		masterCompressor.knee.value = 12;
+		masterCompressor.ratio.value = 12;
+		masterCompressor.attack.value = 0.003;
+		masterCompressor.release.value = 0.15;
+		masterCompressor.connect(ctx.destination);
+	}
+	return masterCompressor;
 }
 
 interface ActiveNote {
@@ -66,7 +81,7 @@ export function createAudioEngine(instrument: Instrument): AudioEngine {
 
 		const releaseGain = ctx.createGain();
 		source.connect(releaseGain);
-		releaseGain.connect(ctx.destination);
+		releaseGain.connect(getMasterOutput());
 		source.start();
 
 		const entry: ActiveNote = { source, releaseGain };
