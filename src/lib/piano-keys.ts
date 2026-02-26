@@ -1,6 +1,5 @@
 export interface PianoKey {
 	note: string; // e.g. "C3", "C#3"
-	frequency: number;
 	code: string; // KeyboardEvent.code (physical key position)
 	displayLabel: string; // resolved label for the user's keyboard layout
 	isBlack: boolean;
@@ -10,21 +9,12 @@ export interface PianoKey {
 	row: number; // 0=bottom, 1=middle, 2=top
 }
 
-// Note frequencies (A4 = 440Hz standard tuning)
-function noteFrequency(semitone: number): number {
-	// semitone 0 = C3, each +1 = one semitone up
-	// C3 = MIDI 48, A4 = MIDI 69 = 440Hz
-	// C3 frequency = 440 * 2^((48-69)/12)
-	return 440 * Math.pow(2, (semitone - 21) / 12);
-}
-
 const SOLFEGE = ['DO', 'DO#', 'RE', 'RE#', 'MI', 'FA', 'FA#', 'SOL', 'SOL#', 'LA', 'LA#', 'SI'];
 const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 const NOTE_NUMBERS = [1, 1, 2, 2, 3, 4, 4, 5, 5, 6, 6, 7];
 const IS_BLACK = [false, true, false, true, false, false, true, false, true, false, true, false];
 
 interface RowConfig {
-	startSemitone: number; // semitone offset from C3
 	octaveNum: number; // 3, 4, or 5
 	whiteKeys: string[]; // KeyboardEvent.code values for white notes
 	blackKeys: string[]; // KeyboardEvent.code values for black notes (C#, D#, F#, G#, A#)
@@ -37,17 +27,15 @@ interface RowConfig {
 const ROW_CONFIGS: RowConfig[] = [
 	{
 		// Bottom row - Lower octave (C3-B3)
-		startSemitone: 0,
 		octaveNum: 3,
 		whiteKeys: ['Comma', 'Period', 'Slash', 'Semicolon', 'Quote', 'BracketLeft', 'BracketRight'],
-		blackKeys: ['KeyL', 'KeyK', 'KeyO', 'KeyP', 'Minus'],
+		blackKeys: ['KeyK', 'KeyL', 'KeyO', 'KeyP', 'Minus'],
 		includeNextC: false,
 		octaveLabel: 'lower',
 		row: 0
 	},
 	{
 		// Middle row - Middle octave (C4-B4)
-		startSemitone: 12,
 		octaveNum: 4,
 		whiteKeys: ['KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyB', 'KeyN', 'KeyM'],
 		blackKeys: ['KeyS', 'KeyD', 'KeyG', 'KeyH', 'KeyJ'],
@@ -57,7 +45,6 @@ const ROW_CONFIGS: RowConfig[] = [
 	},
 	{
 		// Top row - Upper octave (C5-C6)
-		startSemitone: 24,
 		octaveNum: 5,
 		whiteKeys: ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU'],
 		blackKeys: ['Digit2', 'Digit3', 'Digit5', 'Digit6', 'Digit7'],
@@ -87,7 +74,6 @@ export function buildPianoKeys(): PianoKey[] {
 		let blackIdx = 0;
 
 		for (let i = 0; i < 12; i++) {
-			const semitone = config.startSemitone + i;
 			const isBlack = IS_BLACK[i];
 
 			let code: string;
@@ -99,7 +85,6 @@ export function buildPianoKeys(): PianoKey[] {
 
 			keys.push({
 				note: `${NOTE_NAMES[i]}${config.octaveNum}`,
-				frequency: noteFrequency(semitone),
 				code,
 				displayLabel: QWERTY_FALLBACK[code] ?? code,
 				isBlack,
@@ -112,10 +97,8 @@ export function buildPianoKeys(): PianoKey[] {
 
 		// Add next octave's C if configured
 		if (config.includeNextC && config.nextCKey) {
-			const semitone = config.startSemitone + 12;
 			keys.push({
 				note: `C${config.octaveNum + 1}`,
-				frequency: noteFrequency(semitone),
 				code: config.nextCKey,
 				displayLabel: QWERTY_FALLBACK[config.nextCKey] ?? config.nextCKey,
 				isBlack: false,
