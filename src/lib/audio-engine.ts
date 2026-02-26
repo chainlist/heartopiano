@@ -1,4 +1,5 @@
 import { base } from '$app/paths';
+import type { Instrument } from '$lib/types';
 
 let audioContext: AudioContext | null = null;
 
@@ -12,113 +13,102 @@ function getAudioContext(): AudioContext {
 	return audioContext;
 }
 
-// One sample per note from C3 to C6 (Salamander Grand Piano, CC-BY Alexander Holm)
-// Filename convention: natural = "C3", sharp = "Cs3" (lowercase "s" for sharp)
-const NOTE_NAMES = ['C', 'Cs', 'D', 'Ds', 'E', 'F', 'Fs', 'G', 'Gs', 'A', 'As', 'B'];
-
-function buildSampleList(): string[] {
-	const samples: string[] = [];
-	for (let octave = 3; octave <= 5; octave++) {
-		for (const name of NOTE_NAMES) {
-			samples.push(`${name}${octave}`);
-		}
-	}
-	samples.push('C6');
-	return samples;
-}
-
-const ALL_SAMPLES = buildSampleList();
-
-// Map from noteId (e.g. "C#4") to sample filename (e.g. "Cs4")
-function noteIdToSampleName(noteId: string): string {
-	return noteId.replace('#', 's');
-}
-
-const sampleBuffers = new Map<string, AudioBuffer>();
-let samplesLoaded = false;
-let loadingPromise: Promise<void> | null = null;
-
-async function loadSamples(): Promise<void> {
-	if (samplesLoaded) return;
-	if (loadingPromise) return loadingPromise;
-
-	loadingPromise = (async () => {
-		const ctx = getAudioContext();
-		await Promise.all(
-			ALL_SAMPLES.map(async (name) => {
-				const response = await fetch(`${base}/samples/${name}.mp3`);
-				const arrayBuffer = await response.arrayBuffer();
-				const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
-				sampleBuffers.set(name, audioBuffer);
-			})
-		);
-		samplesLoaded = true;
-	})();
-
-	return loadingPromise;
-}
-
 interface ActiveNote {
 	source: AudioBufferSourceNode;
 	releaseGain: GainNode;
 }
 
-const activeNotes = new Map<string, ActiveNote>();
-
-export async function initAudio(): Promise<void> {
-	await loadSamples();
+export interface AudioEngine {
+	init(): Promise<void>;
+	playNote(noteId: string): void;
+	stopNote(noteId: string): void;
 }
 
-export function playNote(noteId: string): void {
-	if (activeNotes.has(noteId)) return;
+export function createAudioEngine(instrument: Instrument): AudioEngine {
+	const sampleBuffers = new Map<string, AudioBuffer>();
+	const activeNotes = new Map<string, ActiveNote>();
+	let samplesLoaded = false;
+	let loadingPromise: Promise<void> | null = null;
 
-	if (!samplesLoaded) {
-		loadSamples().then(() => {
-			if (!activeNotes.has(noteId)) {
-				playSample(noteId);
-			}
-		});
-		return;
+	async function loadSamples(): Promise<void> {
+		if (samplesLoaded) return;
+		if (loadingPromise) return loadingPromise;
+
+		loadingPromise = (async () => {
+			const ctx = getAudioContext();
+			await Promise.all(
+				instrument.sampleList.map(async (name) => {
+					const url = `${base}/samples/${instrument.sampleDir}/${name}.${instrument.sampleExtension}`;
+					const response = await fetch(url);
+					const arrayBuffer = await response.arrayBuffer();
+					const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+					sampleBuffers.set(name, audioBuffer);
+				})
+			);
+			samplesLoaded = true;
+		})();
+
+		return loadingPromise;
 	}
 
-	playSample(noteId);
-}
+	function playSample(noteId: string): void {
+		const ctx = getAudioContext();
+		const { sampleName, detune } = instrument.noteToSample(noteId);
+		const buffer = sampleBuffers.get(sampleName);
 
-function playSample(noteId: string): void {
-	const ctx = getAudioContext();
-	const sampleName = noteIdToSampleName(noteId);
-	const buffer = sampleBuffers.get(sampleName);
+		if (!buffer) return;
 
-	if (!buffer) return;
+		const source = ctx.createBufferSource();
+		source.buffer = buffer;
+		if (detune !== 0) {
+			source.detune.value = detune;
+		}
 
-	const source = ctx.createBufferSource();
-	source.buffer = buffer;
+		const releaseGain = ctx.createGain();
+		source.connect(releaseGain);
+		releaseGain.connect(ctx.destination);
+		source.start();
 
-	const releaseGain = ctx.createGain();
-	source.connect(releaseGain);
-	releaseGain.connect(ctx.destination);
-	source.start();
+		const entry: ActiveNote = { source, releaseGain };
+		activeNotes.set(noteId, entry);
 
-	const entry: ActiveNote = { source, releaseGain };
-	activeNotes.set(noteId, entry);
+		source.onended = () => {
+			if (activeNotes.get(noteId) === entry) {
+				activeNotes.delete(noteId);
+			}
+		};
+	}
 
-	source.onended = () => {
-		if (activeNotes.get(noteId) === entry) {
+	return {
+		init: loadSamples,
+
+		playNote(noteId: string): void {
+			if (activeNotes.has(noteId)) return;
+
+			if (!samplesLoaded) {
+				loadSamples().then(() => {
+					if (!activeNotes.has(noteId)) {
+						playSample(noteId);
+					}
+				});
+				return;
+			}
+
+			playSample(noteId);
+		},
+
+		stopNote(noteId: string): void {
+			const active = activeNotes.get(noteId);
+			if (!active) return;
+
 			activeNotes.delete(noteId);
+
+			const ctx = getAudioContext();
+			const now = ctx.currentTime;
+
+			active.releaseGain.gain.setValueAtTime(1.0, now);
+			active.releaseGain.gain.linearRampToValueAtTime(0.0001, now + 1);
+			active.source.stop(now + 1.05);
 		}
 	};
-}
-
-export function stopNote(noteId: string): void {
-	const active = activeNotes.get(noteId);
-	if (!active) return;
-
-	activeNotes.delete(noteId);
-
-	const ctx = getAudioContext();
-	const now = ctx.currentTime;
-
-	active.releaseGain.gain.setValueAtTime(1.0, now);
-	active.releaseGain.gain.linearRampToValueAtTime(0.0001, now + 1);
-	active.source.stop(now + 1.05);
 }

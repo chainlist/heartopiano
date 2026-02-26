@@ -1,16 +1,16 @@
 <script lang="ts">
   import { resolveDisplayLabels, type KeyMapping } from "$lib/keyboard-map";
   import { createAudioEngine } from "$lib/audio-engine";
-  import { piano } from "$lib/instruments/piano";
+  import { violin } from "$lib/instruments/violin";
   import { INSTRUMENT_KEY, type InstrumentContext } from "$lib/types";
   import Row from "./Row.svelte";
   import Settings from "./Settings.svelte";
   import { onMount, setContext } from "svelte";
 
-  setContext<InstrumentContext>(INSTRUMENT_KEY, { instrument: piano });
+  setContext<InstrumentContext>(INSTRUMENT_KEY, { instrument: violin });
 
-  const audioEngine = createAudioEngine(piano);
-  const { keys, keyMap } = piano;
+  const audioEngine = createAudioEngine(violin);
+  const { keys, keyMap } = violin;
 
   let pressedKeys = $state(new Set<string>());
   let loading = $state(true);
@@ -61,7 +61,7 @@
     }
   }
 
-  const ROW_LABELS = ["Low", "Mid", "High"];
+  const ROW_LABELS = ["Low", "High"];
 </script>
 
 <svelte:window onkeydown={onKeyDown} onkeyup={onKeyUp} />
@@ -70,20 +70,18 @@
 
 <div class="instrument-container">
   {#if loading}
-    <p class="loading">Loading {piano.displayName} samples...</p>
+    <p class="loading">Loading {violin.displayName} samples...</p>
   {/if}
   <div class="instrument-body" style="zoom: {scale}">
-    {#each [2, 1, 0] as rowIdx}
+    {#each [1, 0] as rowIdx}
       {@const rowKeys = rows.get(rowIdx) ?? []}
-      {#if rowKeys.length > 0}
-        <Row
-          keys={rowKeys}
-          {pressedKeys}
-          {notation}
-          onkeypress={handleKeyPress}
-          onkeyrelease={handleKeyRelease}
-          label={ROW_LABELS[rowIdx]} />
-      {/if}
+      <Row
+        keys={rowKeys}
+        {pressedKeys}
+        {notation}
+        onkeypress={handleKeyPress}
+        onkeyrelease={handleKeyRelease}
+        label={ROW_LABELS[rowIdx]} />
     {/each}
   </div>
 </div>

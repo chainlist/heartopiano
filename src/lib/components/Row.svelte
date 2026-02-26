@@ -1,13 +1,13 @@
 <script lang="ts">
-  import type { PianoKey as PianoKeyType } from "$lib/piano-keys";
-  import PianoKey from "./PianoKey.svelte";
+  import type { KeyMapping } from "$lib/keyboard-map";
+  import Key from "./Key.svelte";
 
   interface Props {
-    keys: PianoKeyType[];
+    keys: KeyMapping[];
     pressedKeys: Set<string>;
     notation: "solfege" | "letter";
-    onkeypress: (key: PianoKeyType) => void;
-    onkeyrelease: (key: PianoKeyType) => void;
+    onkeypress: (key: KeyMapping) => void;
+    onkeyrelease: (key: KeyMapping) => void;
     label: string;
   }
 
@@ -18,7 +18,7 @@
   <span class="row-label">{label}</span>
   <div class="keys-container">
     {#each keys as key (key.note)}
-      <PianoKey
+      <Key
         {key}
         isPressed={pressedKeys.has(key.code)}
         {notation}

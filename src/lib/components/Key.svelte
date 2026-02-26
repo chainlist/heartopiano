@@ -1,8 +1,8 @@
 <script lang="ts">
-  import type { PianoKey } from "$lib/piano-keys";
+  import type { KeyMapping } from "$lib/keyboard-map";
 
   interface Props {
-    key: PianoKey;
+    key: KeyMapping;
     isPressed: boolean;
     notation: "solfege" | "letter";
     onpress: () => void;
