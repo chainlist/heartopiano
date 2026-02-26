@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ALL_KEYS, KEY_MAP, type PianoKey } from '$lib/piano-keys';
+	import { ALL_KEYS, KEY_MAP, resolveDisplayLabels, type PianoKey } from '$lib/piano-keys';
 	import { playNote, stopNote, initAudio } from '$lib/audio-engine';
 	import PianoRow from './PianoRow.svelte';
 	import { onMount } from 'svelte';
@@ -7,10 +7,9 @@
 	let pressedKeys = $state(new Set<string>());
 	let loading = $state(true);
 
-	onMount(() => {
-		initAudio().then(() => {
-			loading = false;
-		});
+	onMount(async () => {
+		await Promise.all([initAudio(), resolveDisplayLabels(ALL_KEYS)]);
+		loading = false;
 	});
 
 	// Group keys by row
@@ -24,21 +23,20 @@
 	});
 
 	function handleKeyPress(key: PianoKey) {
-		pressedKeys.add(key.keyboard);
+		pressedKeys.add(key.code);
 		pressedKeys = new Set(pressedKeys);
 		playNote(key.frequency, key.note);
 	}
 
 	function handleKeyRelease(key: PianoKey) {
-		pressedKeys.delete(key.keyboard);
+		pressedKeys.delete(key.code);
 		pressedKeys = new Set(pressedKeys);
 		stopNote(key.note);
 	}
 
 	function onKeyDown(e: KeyboardEvent) {
 		if (e.repeat) return;
-		const keyStr = e.key.toLowerCase();
-		const pianoKey = KEY_MAP.get(keyStr);
+		const pianoKey = KEY_MAP.get(e.code);
 		if (pianoKey) {
 			e.preventDefault();
 			handleKeyPress(pianoKey);
@@ -46,8 +44,7 @@
 	}
 
 	function onKeyUp(e: KeyboardEvent) {
-		const keyStr = e.key.toLowerCase();
-		const pianoKey = KEY_MAP.get(keyStr);
+		const pianoKey = KEY_MAP.get(e.code);
 		if (pianoKey) {
 			e.preventDefault();
 			handleKeyRelease(pianoKey);

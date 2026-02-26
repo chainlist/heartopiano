@@ -3,13 +3,13 @@
 </script>
 
 <svelte:head>
-  <title>ChainList's Piano</title>
+  <title>Heartopiano</title>
 </svelte:head>
 
 <main>
   <div class="header">
-    <h1>ChainList Piano</h1>
-    <p>Une semaine pour tout apprendre</p>
+    <h1>Heartopiano</h1>
+    <p>Made by ChainList</p>
   </div>
   <Piano />
 </main>

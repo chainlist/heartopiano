@@ -19,7 +19,7 @@
 		{#each keys as key (key.note)}
 			<PianoKey
 				{key}
-				isPressed={pressedKeys.has(key.keyboard)}
+				isPressed={pressedKeys.has(key.code)}
 				onpress={() => onkeypress(key)}
 				onrelease={() => onkeyrelease(key)}
 			/>

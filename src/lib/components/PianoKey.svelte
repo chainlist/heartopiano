@@ -10,21 +10,6 @@
 
 	let { key, isPressed, onpress, onrelease }: Props = $props();
 
-	function getDisplayKey(kb: string): string {
-		const special: Record<string, string> = {
-			',': ',',
-			'.': '.',
-			'/': '/',
-			';': ';',
-			"'": "'",
-			'[': '[',
-			']': ']',
-			'-': '-',
-			'=': '='
-		};
-		return special[kb] ?? kb.toUpperCase();
-	}
-
 	let dotPosition = $derived(
 		key.octaveLabel === 'upper' ? 'above' : key.octaveLabel === 'lower' ? 'below' : 'none'
 	);
@@ -45,7 +30,7 @@
 	{#if !key.isBlack}
 		<span class="solfege">{key.solfege}</span>
 	{/if}
-	<span class="keyboard-label">{getDisplayKey(key.keyboard)}</span>
+	<span class="keyboard-label">{key.displayLabel}</span>
 </button>
 
 <style>
