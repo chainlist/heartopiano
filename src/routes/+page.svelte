@@ -8,8 +8,8 @@
 
 <main>
   <div class="header">
-    <h1>Heartopiano</h1>
-    <p>Made by ChainList</p>
+    <h1 class="title">Heartopiano</h1>
+    <p class="subtitle">By ChainList</p>
   </div>
   <Piano />
 </main>
@@ -39,8 +39,12 @@
   }
 
   .header {
-    text-align: center;
     margin-bottom: 20px;
+  }
+
+  .subtitle {
+    text-align: right;
+    color: #dfdfdf;
   }
 
   h1 {
@@ -49,7 +53,7 @@
     letter-spacing: 4px;
     color: #e8d5f5;
     text-shadow: 0 0 30px rgba(180, 130, 220, 0.3);
-    margin: 0 0 8px;
+    margin: 0 0 -4px;
   }
 
   p {
