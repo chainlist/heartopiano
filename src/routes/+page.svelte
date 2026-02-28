@@ -1,6 +1,7 @@
 <script lang="ts">
   import Piano from "$lib/components/Piano.svelte";
   import Violin from "$lib/components/Violin.svelte";
+  import Volume from "$lib/components/Volume.svelte";
 
   let instrument: "piano" | "violin" = $state("piano");
 </script>
@@ -28,6 +29,7 @@
       Violin
     </button>
   </div>
+  <Volume />
   {#if instrument === "piano"}
     <Piano />
   {:else}

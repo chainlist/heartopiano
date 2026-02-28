@@ -3,6 +3,7 @@ import type { Instrument } from '$lib/types';
 
 let audioContext: AudioContext | null = null;
 let masterCompressor: DynamicsCompressorNode | null = null;
+let masterGain: GainNode | null = null;
 
 function getAudioContext(): AudioContext {
 	if (!audioContext) {
@@ -17,15 +18,26 @@ function getAudioContext(): AudioContext {
 function getMasterOutput(): DynamicsCompressorNode {
 	const ctx = getAudioContext();
 	if (!masterCompressor) {
+		masterGain = ctx.createGain();
+		masterGain.connect(ctx.destination);
+
 		masterCompressor = ctx.createDynamicsCompressor();
 		masterCompressor.threshold.value = -6;
 		masterCompressor.knee.value = 12;
 		masterCompressor.ratio.value = 12;
 		masterCompressor.attack.value = 0.003;
 		masterCompressor.release.value = 0.15;
-		masterCompressor.connect(ctx.destination);
+		masterCompressor.connect(masterGain);
 	}
 	return masterCompressor;
+}
+
+export function setMasterVolume(value: number): void {
+	const ctx = getAudioContext();
+	getMasterOutput();
+	if (masterGain) {
+		masterGain.gain.setTargetAtTime(value, ctx.currentTime, 0.015);
+	}
 }
 
 interface ActiveNote {
